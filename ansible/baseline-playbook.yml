@@ -1,0 +1,28 @@
+---
+- hosts: all
+  become: true
+  gather_facts: true
+  pre_tasks:
+  - name: Allow 'wheel' group to have passwordless sudo
+    lineinfile:
+      dest: /etc/sudoers
+      state: present
+      regexp: '^%wheel'
+      line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+      validate: 'visudo -cf %s'
+  - name: create users
+    include_role:
+      name: arthurfelipems.adduser_gitkeys
+    loop:
+      - { username: "arthurfelipems", user_groups: ["wheel", "adm"] }
+    
+  roles:
+    - geerlingguy.docker
+  vars:
+    - docker_edition: 'ce'
+    - docker_package: "docker-{{ docker_edition }}"
+    - docker_service_enabled: true
+    - docker_package_state: present
+    - docker_service_state: started
+    - docker_restart_handler_state: restarted
+    - docker_install_compose: true
